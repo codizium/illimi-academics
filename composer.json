@@ -1,0 +1,24 @@
+{
+  "name": "codizium/illimi-academics",
+  "description": "iLLIMI Edu-Suites - Academics Module",
+  "type": "library",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.2",
+    "codizium/codizium-core": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Illimi\\Academics\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Illimi\\Academics\\AcademicsServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
