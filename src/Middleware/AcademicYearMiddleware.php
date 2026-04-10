@@ -40,6 +40,8 @@ class AcademicYearMiddleware
         //     return $next($request);
         // }
 
+        // dd($request->route()->getName(), $this->scopedRoutePatterns);
+
         $orgID = $this->organization?->id ?? null;
         if (!$orgID) {
             abort(401, 'Unauthorized request');
@@ -57,30 +59,34 @@ class AcademicYearMiddleware
 
 
         if (!$AcadYear) {
-            abort(404, 'No active academic year found');
+            // abort(404, 'No active academic year found');
+            
+        } else if ($AcadYear) {
+            app()->instance(AcademicYear::class, $AcadYear);
+            $request->merge(['academic_year_id' => $AcadYear->id]);
+
+            $term = Session::get('academic_term');
+
+            if (!$term) {
+                $term = AcademicTerm::where([
+                    'status' => 'active',
+                ])->first();
+            }
+
+            if ($term) {
+                app()->instance(AcademicTerm::class, $term);
+                $request->merge(['academic_term_id' => $term->id]);
+            }
+            
+
+            
+            View::share('academic_year', $AcadYear);
+            View::share('academic_term', $term);
         }
-
-        app()->instance(AcademicYear::class, $AcadYear);
-        $request->merge(['academic_year_id' => $AcadYear->id]);
-
-        $term = Session::get('academic_term');
-
-        if (!$term) {
-            $term = AcademicTerm::where([
-                'status' => 'active',
-            ])->first();
-        }
-
-        if ($term) {
-            app()->instance(AcademicTerm::class, $term);
-            $request->merge(['academic_term_id' => $term->id]);
-        }
+        
         $terms = AcademicTerm::all();
-   
-        View::share('years', AcademicYear::all());
-        View::share('terms', $terms);
-        View::share('academic_year', $AcadYear);
-        View::share('academic_term', $term);
+    View::share('years', AcademicYear::all());
+            View::share('terms', $terms);
 
         return $next($request);
     }
