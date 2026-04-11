@@ -23,6 +23,10 @@ class AcademicsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/illimi-academics.php', 'illimi-academics');
+
+        $this->app->singleton('illimi-academics', function () {
+            return new IllimiAcademics();
+        });
     }
 
     public function boot(): void
