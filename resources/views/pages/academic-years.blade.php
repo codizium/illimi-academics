@@ -30,10 +30,7 @@
         <div class="card-body p-0 dataTable-wrapper">
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
-                <div>
-                    <h6 class="mb-4">Academic Year Directory</h6>
-                    <p class="mb-0 text-secondary-light">Create, update, and retire sessions from one place.</p>
-                </div>
+
                 <form class="navbar-search dt-search m-0">
                     <input type="text" class="dt-input bg-transparent radius-4" name="search"
                         placeholder="Search years..." />
@@ -53,7 +50,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (($academicYears ?? collect()) as $year)
+                        @foreach ($academicYears ?? collect() as $year)
                             @php
                                 $yearPayload = [
                                     'id' => $year->id,
@@ -78,8 +75,10 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge text-sm fw-medium px-12 py-4 radius-8 bg-primary-50 text-primary-600">
-                                        {{ $year->terms_count }} {{ \Illuminate\Support\Str::plural('term', $year->terms_count) }}
+                                    <span
+                                        class="badge text-sm fw-medium px-12 py-4 radius-8 bg-primary-50 text-primary-600">
+                                        {{ $year->terms_count }}
+                                        {{ \Illuminate\Support\Str::plural('term', $year->terms_count) }}
                                     </span>
                                 </td>
                                 <td>
@@ -90,11 +89,13 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex align-items-center gap-8">
-                                        <button type="button" class="btn btn-sm btn-outline-primary-600 js-academic-year-modal-trigger"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary-600 js-academic-year-modal-trigger"
                                             data-mode="edit" data-year='@json($yearPayload)'>
                                             Edit
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger-600 js-academic-year-delete-trigger"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-danger-600 js-academic-year-delete-trigger"
                                             data-year='@json($yearPayload)'>
                                             Delete
                                         </button>
@@ -114,14 +115,15 @@
                 <div class="modal-header">
                     <div>
                         <h5 class="modal-title" id="academicYearModalTitle">Add Academic Year</h5>
-                        <p class="mb-0 text-sm text-secondary-light" id="academicYearModalSubtitle">Fill in the session details and save.</p>
+                        <p class="mb-0 text-sm text-secondary-light" id="academicYearModalSubtitle">Fill in the session
+                            details and save.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="academicYearForm" class="row g-3"
                         data-create-url="{{ route('v1.academics.academic_years.store', [], false) }}"
-                        data-update-url-template="{{ route('v1.academics.academic_years.update', ['id' => '__ID__'], false) }}">
+                        data-update-url-template="{{ route('v1.academics.academic_years.update', ['academic_year' => '__ID__'], false) }}">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
                             <input type="text" class="form-control" name="name" placeholder="2025/2026" />
@@ -141,7 +143,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Status</label>
                             <select class="form-select" name="status">
-                                @foreach (($statuses ?? ['active', 'inactive', 'closed']) as $status)
+                                @foreach ($statuses ?? ['active', 'inactive', 'closed'] as $status)
                                     <option value="{{ $status }}">{{ ucfirst($status) }}</option>
                                 @endforeach
                             </select>
@@ -154,7 +156,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-neutral" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="academicYearForm" class="btn btn-primary-600" id="academicYearSubmitButton">Save Academic Year</button>
+                    <button type="submit" form="academicYearForm" class="btn btn-primary-600"
+                        id="academicYearSubmitButton">Save Academic Year</button>
                 </div>
             </div>
         </div>
@@ -168,10 +171,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-8">Are you sure you want to delete <strong id="academicYearDeleteName">this academic year</strong>?</p>
+                    <p class="mb-8">Are you sure you want to delete <strong id="academicYearDeleteName">this academic
+                            year</strong>?</p>
                     <p class="mb-0 text-sm text-secondary-light">This action cannot be undone.</p>
                     <form id="academicYearDeleteForm"
-                        data-delete-url-template="{{ route('v1.academics.academic_years.destroy', ['id' => '__ID__'], false) }}"></form>
+                        data-delete-url-template="{{ route('v1.academics.academic_years.destroy', ['academic_year' => '__ID__'], false) }}">
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-neutral" data-bs-dismiss="modal">Cancel</button>
@@ -296,7 +301,8 @@
 
             bindAcademicAjaxForm({
                 formSelector: '#academicYearDeleteForm',
-                url: (currentForm) => currentForm.data('deleteUrlTemplate').replace('__ID__', currentForm.data('deletingId')),
+                url: (currentForm) => currentForm.data('deleteUrlTemplate').replace('__ID__', currentForm.data(
+                    'deletingId')),
                 method: 'DELETE',
                 loadingText: 'Deleting academic year...',
                 successTitle: 'Academic year deleted',

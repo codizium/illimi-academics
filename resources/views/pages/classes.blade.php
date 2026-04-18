@@ -98,7 +98,7 @@
                 <div class="modal-body">
                     <form id="classForm" class="row g-3"
                         data-create-url="{{ route('v1.academics.classes.store', [], false) }}"
-                        data-update-url-template="{{ route('v1.academics.classes.update', ['id' => '__ID__'], false) }}">
+                        data-update-url-template="{{ route('v1.academics.classes.update', ['class' => '__ID__'], false) }}">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
                             <input type="text" class="form-control" name="name" placeholder="JSS 1" />
@@ -163,7 +163,7 @@
                     </p>
                     <p class="mb-0 text-sm text-secondary-light">This action cannot be undone.</p>
                     <form id="classDeleteForm"
-                        data-delete-url-template="{{ route('v1.academics.classes.destroy', ['id' => '__ID__'], false) }}">
+                        data-delete-url-template="{{ route('v1.academics.classes.destroy', ['class' => '__ID__'], false) }}">
                     </form>
                 </div>
                 <div class="modal-footer">

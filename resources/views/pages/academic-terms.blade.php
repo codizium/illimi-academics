@@ -28,10 +28,7 @@
         <div class="card-body p-0 dataTable-wrapper">
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
-                <div>
-                    <h6 class="mb-4">Academic Term Directory</h6>
-                    <p class="mb-0 text-secondary-light">Manage each term window, status, and academic-year mapping.</p>
-                </div>
+
                 <form class="navbar-search dt-search m-0">
                     <input type="text" class="dt-input bg-transparent radius-4" name="search"
                         placeholder="Search terms..." />
@@ -85,11 +82,13 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex align-items-center gap-8">
-                                        <button type="button" class="btn btn-sm btn-outline-primary-600 js-academic-term-modal-trigger"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary-600 js-academic-term-modal-trigger"
                                             data-mode="edit" data-term='@json($termPayload)'>
                                             Edit
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger-600 js-academic-term-delete-trigger"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-danger-600 js-academic-term-delete-trigger"
                                             data-term='@json($termPayload)'>
                                             Delete
                                         </button>
@@ -113,14 +112,15 @@
                 <div class="modal-header">
                     <div>
                         <h5 class="modal-title" id="academicTermModalTitle">Add Term</h5>
-                        <p class="mb-0 text-sm text-secondary-light" id="academicTermModalSubtitle">Fill in the term details and save.</p>
+                        <p class="mb-0 text-sm text-secondary-light" id="academicTermModalSubtitle">Fill in the term details
+                            and save.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="academicTermForm" class="row g-3"
                         data-create-url="{{ route('v1.academics.terms.store', [], false) }}"
-                        data-update-url-template="{{ route('v1.academics.terms.update', ['id' => '__ID__'], false) }}">
+                        data-update-url-template="{{ route('v1.academics.terms.update', ['term' => '__ID__'], false) }}">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
                             <input type="text" class="form-control" name="name" placeholder="First Term" />
@@ -129,7 +129,7 @@
                             <label class="form-label">Academic Year</label>
                             <select class="form-select" name="academic_year_id">
                                 <option value="">Select Academic Year</option>
-                                @foreach (($academicYears ?? collect()) as $academicYear)
+                                @foreach ($academicYears ?? collect() as $academicYear)
                                     <option value="{{ $academicYear->id }}">{{ $academicYear->name }}</option>
                                 @endforeach
                             </select>
@@ -141,7 +141,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
                             <select class="form-select" name="status">
-                                @foreach (($statuses ?? ['active', 'inactive', 'closed']) as $status)
+                                @foreach ($statuses ?? ['active', 'inactive', 'closed'] as $status)
                                     <option value="{{ $status }}">{{ ucfirst($status) }}</option>
                                 @endforeach
                             </select>
@@ -162,7 +162,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-neutral" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="academicTermForm" class="btn btn-primary-600" id="academicTermSubmitButton">Save Term</button>
+                    <button type="submit" form="academicTermForm" class="btn btn-primary-600"
+                        id="academicTermSubmitButton">Save Term</button>
                 </div>
             </div>
         </div>
@@ -176,10 +177,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-8">Are you sure you want to delete <strong id="academicTermDeleteName">this term</strong>?</p>
+                    <p class="mb-8">Are you sure you want to delete <strong id="academicTermDeleteName">this
+                            term</strong>?</p>
                     <p class="mb-0 text-sm text-secondary-light">This action cannot be undone.</p>
                     <form id="academicTermDeleteForm"
-                        data-delete-url-template="{{ route('v1.academics.terms.destroy', ['id' => '__ID__'], false) }}"></form>
+                        data-delete-url-template="{{ route('v1.academics.terms.destroy', ['term' => '__ID__'], false) }}">
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-neutral" data-bs-dismiss="modal">Cancel</button>
@@ -305,7 +308,8 @@
 
             bindAcademicAjaxForm({
                 formSelector: '#academicTermDeleteForm',
-                url: (currentForm) => currentForm.data('deleteUrlTemplate').replace('__ID__', currentForm.data('deletingId')),
+                url: (currentForm) => currentForm.data('deleteUrlTemplate').replace('__ID__', currentForm.data(
+                    'deletingId')),
                 method: 'DELETE',
                 loadingText: 'Deleting term...',
                 successTitle: 'Term deleted',

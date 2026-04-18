@@ -20,10 +20,6 @@
         <div class="card-body p-0 dataTable-wrapper">
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
-                <div>
-                    <h6 class="mb-4">Grade Scale Directory</h6>
-                    <p class="mb-0 text-secondary-light">Create, update, and remove grading schemes without leaving the list.</p>
-                </div>
                 <form class="navbar-search dt-search m-0">
                     <input type="text" class="dt-input bg-transparent radius-4" name="search"
                         placeholder="Search grade scales..." />
@@ -44,14 +40,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (($gradeScales ?? collect()) as $gradeScale)
+                        @foreach ($gradeScales ?? collect() as $gradeScale)
                             @php
                                 $gradeScalePayload = [
                                     'id' => $gradeScale->id,
                                     'name' => $gradeScale->name,
                                     'code' => $gradeScale->code,
-                                    'min_score' => $gradeScale->min_score !== null ? (float) $gradeScale->min_score : null,
-                                    'max_score' => $gradeScale->max_score !== null ? (float) $gradeScale->max_score : null,
+                                    'min_score' =>
+                                        $gradeScale->min_score !== null ? (float) $gradeScale->min_score : null,
+                                    'max_score' =>
+                                        $gradeScale->max_score !== null ? (float) $gradeScale->max_score : null,
                                     'description' => $gradeScale->description,
                                     'is_default' => (int) $gradeScale->is_default,
                                 ];
@@ -60,7 +58,8 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td class="fw-semibold text-primary-light">{{ $gradeScale->name }}</td>
                                 <td>{{ $gradeScale->code ?: '—' }}</td>
-                                <td>{{ $gradeScale->min_score !== null && $gradeScale->max_score !== null ? rtrim(rtrim(number_format((float) $gradeScale->min_score, 2, '.', ''), '0'), '.') . ' - ' . rtrim(rtrim(number_format((float) $gradeScale->max_score, 2, '.', ''), '0'), '.') : '—' }}</td>
+                                <td>{{ $gradeScale->min_score !== null && $gradeScale->max_score !== null ? rtrim(rtrim(number_format((float) $gradeScale->min_score, 2, '.', ''), '0'), '.') . ' - ' . rtrim(rtrim(number_format((float) $gradeScale->max_score, 2, '.', ''), '0'), '.') : '—' }}
+                                </td>
                                 <td>
                                     <span
                                         class="badge text-sm fw-medium px-12 py-4 radius-8 {{ $gradeScale->is_default ? 'bg-success-focus text-success-main' : 'bg-neutral-100 text-neutral-600' }}">
@@ -70,11 +69,13 @@
                                 <td>{{ $gradeScale->description ?: '—' }}</td>
                                 <td class="text-center">
                                     <div class="d-inline-flex align-items-center gap-8">
-                                        <button type="button" class="btn btn-sm btn-outline-primary-600 js-grade-scale-modal-trigger"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary-600 js-grade-scale-modal-trigger"
                                             data-mode="edit" data-grade-scale='@json($gradeScalePayload)'>
                                             Edit
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger-600 js-grade-scale-delete-trigger"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-danger-600 js-grade-scale-delete-trigger"
                                             data-grade-scale='@json($gradeScalePayload)'>
                                             Delete
                                         </button>
@@ -94,14 +95,15 @@
                 <div class="modal-header">
                     <div>
                         <h5 class="modal-title" id="gradeScaleModalTitle">Add Grade Scale</h5>
-                        <p class="mb-0 text-sm text-secondary-light" id="gradeScaleModalSubtitle">Fill in the grade scale details and save.</p>
+                        <p class="mb-0 text-sm text-secondary-light" id="gradeScaleModalSubtitle">Fill in the grade scale
+                            details and save.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="gradeScaleForm" class="row g-3"
                         data-create-url="{{ route('v1.academics.grade_scales.store', [], false) }}"
-                        data-update-url-template="{{ route('v1.academics.grade_scales.update', ['id' => '__ID__'], false) }}">
+                        data-update-url-template="{{ route('v1.academics.grade_scales.update', ['grade_scale' => '__ID__'], false) }}">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
                             <input type="text" class="form-control" name="name" placeholder="Standard Scale" />
@@ -112,11 +114,13 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Minimum Score</label>
-                            <input type="number" class="form-control" name="min_score" min="0" step="0.01" placeholder="70" />
+                            <input type="number" class="form-control" name="min_score" min="0" step="0.01"
+                                placeholder="70" />
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Maximum Score</label>
-                            <input type="number" class="form-control" name="max_score" min="0" step="0.01" placeholder="100" />
+                            <input type="number" class="form-control" name="max_score" min="0" step="0.01"
+                                placeholder="100" />
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Default</label>
@@ -133,7 +137,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-neutral" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="gradeScaleForm" class="btn btn-primary-600" id="gradeScaleSubmitButton">Save Grade Scale</button>
+                    <button type="submit" form="gradeScaleForm" class="btn btn-primary-600"
+                        id="gradeScaleSubmitButton">Save Grade Scale</button>
                 </div>
             </div>
         </div>
@@ -147,10 +152,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-8">Are you sure you want to delete <strong id="gradeScaleDeleteName">this grade scale</strong>?</p>
+                    <p class="mb-8">Are you sure you want to delete <strong id="gradeScaleDeleteName">this grade
+                            scale</strong>?</p>
                     <p class="mb-0 text-sm text-secondary-light">This action cannot be undone.</p>
                     <form id="gradeScaleDeleteForm"
-                        data-delete-url-template="{{ route('v1.academics.grade_scales.destroy', ['id' => '__ID__'], false) }}"></form>
+                        data-delete-url-template="{{ route('v1.academics.grade_scales.destroy', ['grade_scale' => '__ID__'], false) }}">
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-neutral" data-bs-dismiss="modal">Cancel</button>
@@ -252,7 +259,8 @@
 
             bindAcademicAjaxForm({
                 formSelector: '#gradeScaleDeleteForm',
-                url: (currentForm) => currentForm.data('deleteUrlTemplate').replace('__ID__', currentForm.data('deletingId')),
+                url: (currentForm) => currentForm.data('deleteUrlTemplate').replace('__ID__', currentForm.data(
+                    'deletingId')),
                 method: 'DELETE',
                 loadingText: 'Deleting grade scale...',
                 successTitle: 'Grade scale deleted',

@@ -14,6 +14,7 @@ class SubjectWebController extends AcademicsWebController
             ->with(['teachers', 'classes', 'currentSyllabus'])
             ->orderBy('name')
             ->get();
+        // dd($subjects->count());
         $teachers = $this->queryFor(Staff::class)
             ->where('status', Staff::STATUS_ACTIVE)
             ->orderBy('first_name')

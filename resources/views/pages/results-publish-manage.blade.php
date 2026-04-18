@@ -10,6 +10,48 @@
     $publicationUnpublishUrl = route('v1.academics.results.unpublish', [], false);
 @endphp
 
+@push('styles')
+    <style>
+        .results-panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.38);
+            z-index: 98;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .3s ease, visibility .3s ease;
+        }
+
+        .results-panel-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .results-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: min(920px, 100%);
+            height: 100vh;
+            background: #fff;
+            z-index: 99;
+            transform: translateX(100%);
+            transition: transform .3s ease;
+            overflow-y: auto;
+            box-shadow: -12px 0 35px rgba(15, 23, 42, 0.14);
+        }
+
+        .results-panel.active {
+            transform: translateX(0);
+        }
+
+        .results-panel-subtitle {
+            color: #64748b;
+            font-size: 13px;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="breadcrumb d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
         <div>
@@ -157,27 +199,28 @@
         </div>
     </div>
 
-    <div class="modal fade" id="studentResultDetailModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div>
-                        <h5 class="modal-title mb-1" id="studentResultDetailTitle">Student Result Details</h5>
-                        <p class="text-secondary-light mb-0 small" id="studentResultDetailMeta">Assessment record</p>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table bordered-table mb-0 align-middle">
-                            <thead id="studentResultDetailHead"></thead>
-                            <tbody id="studentResultDetailBody"></tbody>
-                        </table>
-                    </div>
-                    <div id="studentResultDetailEmpty" class="d-none text-center py-32 text-secondary-light">
-                        No assessment records found for this student.
-                    </div>
-                </div>
+    <div class="results-panel-overlay"></div>
+
+    <div id="studentResultDetailPanel" class="results-panel">
+        <div class="px-20 py-12 border-bottom d-flex align-items-center justify-content-between gap-20">
+            <div>
+                <h5 class="text-lg mb-1" id="studentResultDetailTitle">Student Result Details</h5>
+                <p class="mb-0 results-panel-subtitle" id="studentResultDetailMeta">Assessment record</p>
+            </div>
+            <button type="button" class="text-danger-600 text-lg d-flex border-0 bg-transparent"
+                data-results-close="studentResultDetailPanel">
+                <i class="ri-close-large-line"></i>
+            </button>
+        </div>
+        <div class="p-20">
+            <div class="table-responsive">
+                <table class="table bordered-table mb-0 align-middle">
+                    <thead id="studentResultDetailHead"></thead>
+                    <tbody id="studentResultDetailBody"></tbody>
+                </table>
+            </div>
+            <div id="studentResultDetailEmpty" class="d-none text-center py-32 text-secondary-light">
+                No assessment records found for this student.
             </div>
         </div>
     </div>
@@ -194,11 +237,21 @@
             const unpublishUrl = @json($publicationUnpublishUrl);
             const redirectUrl = @json($publicationRedirectUrl);
             const students = @json($students ?? []);
-            const detailModalElement = document.getElementById('studentResultDetailModal');
-            const detailModal = detailModalElement ? new bootstrap.Modal(detailModalElement) : null;
 
             const rowCheckboxes = () => $('.js-publication-row:not(:disabled)');
             const escapeHtml = (value) => $('<div>').text(value ?? '').html();
+            const overlay = $('.results-panel-overlay');
+
+            const openPanel = (panelId) => {
+                $('.results-panel').removeClass('active');
+                $('#' + panelId).addClass('active');
+                overlay.addClass('active');
+            };
+
+            const closePanels = () => {
+                $('.results-panel').removeClass('active');
+                overlay.removeClass('active');
+            };
 
             const collectIds = (mode) => rowCheckboxes().filter(function() {
                 if (!this.checked) {
@@ -306,6 +359,9 @@
                 $('#studentResultDetailBody').html(rows);
             };
 
+            $(document).on('click', '[data-results-close]', closePanels);
+            $(document).on('click', '.results-panel-overlay', closePanels);
+
             $('#toggleAllPublicationRows').on('change', function() {
                 rowCheckboxes().prop('checked', this.checked);
             });
@@ -366,12 +422,12 @@
                 const studentId = String($(this).data('student-id') || '');
                 const student = students.find((item) => String(item.student_id || '') === studentId);
 
-                if (!student || !detailModal) {
+                if (!student) {
                     return;
                 }
 
                 renderStudentDetail(student);
-                detailModal.show();
+                openPanel('studentResultDetailPanel');
             });
         })(window.jQuery);
     </script>

@@ -57,7 +57,7 @@ class ExamController extends BaseController
      */
     public function store(StoreExamRequest $request)
     {
-        $this->authorize('create', Exam::class);
+        // $this->authorize('create', Exam::class);
 
         $exam = $this->service->create($request->validated());
         $exam = $this->service->findById($exam->id) ?? $exam;

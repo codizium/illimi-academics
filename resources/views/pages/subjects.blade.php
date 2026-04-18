@@ -20,10 +20,7 @@
         <div class="card-body p-0 dataTable-wrapper">
             <div
                 class="d-flex align-items-center justify-content-between flex-wrap gap-16 px-20 py-12 border-bottom border-neutral-200">
-                <div>
-                    <h6 class="mb-4">Subject Directory</h6>
-                    <p class="mb-0 text-secondary-light">Manage subjects, teacher allocation, and class allocation. Syllabi are managed separately.</p>
-                </div>
+
                 <form class="navbar-search dt-search m-0">
                     <input type="text" class="dt-input bg-transparent radius-4" name="search"
                         placeholder="Search subjects..." />
@@ -40,13 +37,13 @@
                             <th>Compulsory</th>
                             <th>Teachers</th>
                             <th>Classes</th>
-                            <th>Credit Units</th>
+                            {{-- <th>Credit Units</th> --}}
                             <th>Current Syllabus</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (($subjects ?? collect()) as $subject)
+                        @foreach ($subjects ?? collect() as $subject)
                             @php
                                 $teacherNames = $subject->teachers
                                     ->map(
@@ -80,8 +77,8 @@
                                     @endif
                                 </td>
                                 <td>{{ $teacherNames->isNotEmpty() ? $teacherNames->join(', ') : '—' }}</td>
-                                <td>{{ $classNames->isNotEmpty() ? $classNames->join(', ') : '—' }}</td>
-                                <td>{{ $subject->credit_units ?? '—' }}</td>
+                                <td>{{ $subject->classes->count() }}</td>
+                                {{-- <td>{{ $subject->credit_units ?? '—' }}</td> --}}
                                 <td>{{ $subject->currentSyllabus?->title ?: '—' }}</td>
                                 <td class="text-center">
                                     <div class="d-inline-flex align-items-center gap-8">
@@ -115,7 +112,7 @@
                 <div class="modal-body">
                     <form id="subjectForm" class="row g-3"
                         data-create-url="{{ route('v1.academics.subjects.store', [], false) }}"
-                        data-update-url-template="{{ route('v1.academics.subjects.update', ['id' => '__ID__'], false) }}">
+                        data-update-url-template="{{ route('v1.academics.subjects.update', ['subject' => '__ID__'], false) }}">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
                             <input type="text" class="form-control" name="name" placeholder="Mathematics" />
@@ -183,7 +180,7 @@
                             subject</strong>?</p>
                     <p class="mb-0 text-sm text-secondary-light">This action cannot be undone.</p>
                     <form id="subjectDeleteForm"
-                        data-delete-url-template="{{ route('v1.academics.subjects.destroy', ['id' => '__ID__'], false) }}">
+                        data-delete-url-template="{{ route('v1.academics.subjects.destroy', ['subject' => '__ID__'], false) }}">
                     </form>
                 </div>
                 <div class="modal-footer">
