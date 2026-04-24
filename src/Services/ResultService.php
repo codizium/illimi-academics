@@ -173,47 +173,9 @@ class ResultService
             return collect();
         }
 
-        $classes->each(function (AcademicClass $class) use ($academicYear, $academicTerm, $organizationId): void {
-            $students = Student::query()
-                ->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId))
-                ->where('class_id', $class->id)
-                ->where('status', Student::STATUS_ACTIVE)
-                ->get(['id', 'first_name', 'last_name', 'admission_number']);
-
-            if ($students->isEmpty()) {
-                return;
-            }
-
-            $assessments = DB::table('illimi_gradebook_assessments as assessments')
-                ->leftJoin('illimi_grade_scales as grade_scales', 'grade_scales.id', '=', 'assessments.grade_scale_id')
-                ->when($organizationId, fn ($query) => $query->where('assessments.organization_id', $organizationId))
-                ->where('assessments.academic_class_id', $class->id)
-                ->where('assessments.academic_year_id', $academicYear->id)
-                ->where('assessments.academic_term_id', $academicTerm->id)
-                ->whereIn('assessments.student_id', $students->pluck('id'))
-                ->whereNull('assessments.deleted_at')
-                ->get([
-                    'assessments.id as assessment_id',
-                    'assessments.student_id',
-                    'assessments.subject_id',
-                    'assessments.assignment1',
-                    'assessments.assignment2',
-                    'assessments.test1',
-                    'assessments.test2',
-                    'assessments.exams',
-                    'assessments.graded',
-                    'grade_scales.description as remark',
-                ]);
-
-            $this->syncResultsFromAssessments(
-                $class,
-                $academicYear,
-                $academicTerm,
-                $students,
-                $assessments,
-                $organizationId
-            );
-        });
+        // Performance: We no longer sync results for every class on the index page.
+        // This process is expensive for large data volumes. Synchronization now
+        // happens when a class is viewed for publication or during a background task.
 
         $assessmentCounts = DB::table('illimi_gradebook_assessments')
             ->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId))
@@ -718,14 +680,15 @@ class ResultService
                 'assessments.student_id',
                 'assessments.subject_id',
                 'subjects.name as subject_name',
-                'assessments.assignment1',
-                'assessments.assignment2',
-                'assessments.test1',
-                'assessments.test2',
-                'assessments.exams',
-                'assessments.graded',
-                'grade_scales.description as remark',
             ]);
+
+        $gradeScales = GradeScale::query()
+            ->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId))
+            ->orderByDesc('min_score')
+            ->get();
+
+        $assessmentItemsByAssessmentId = $this->getAssessmentItemsByAssessmentId($assessments);
+        $assessmentTotalsByAssessmentId = $this->getAssessmentTotals($assessments, $assessmentItemsByAssessmentId);
 
         $this->syncResultsFromAssessments(
             $class,
@@ -733,6 +696,8 @@ class ResultService
             $academicTerm,
             $students,
             $assessments,
+            $assessmentTotalsByAssessmentId,
+            $gradeScales,
             $organizationId
         );
 
@@ -745,38 +710,7 @@ class ResultService
             ->get()
             ->keyBy('student_id');
 
-        $assessmentItemsByAssessmentId = DB::table('illimi_gradebook_assessment_items as items')
-            ->leftJoin('illimi_gradebook_template_items as template_items', 'template_items.id', '=', 'items.template_item_id')
-            ->whereIn('items.assessment_id', $assessments->pluck('assessment_id')->filter()->values())
-            ->whereNull('items.deleted_at')
-            ->orderBy('template_items.position')
-            ->get([
-                'items.assessment_id',
-                'items.score',
-                'template_items.label',
-                'template_items.code',
-                'template_items.component_type',
-                'template_items.affects_total',
-            ])
-            ->groupBy('assessment_id');
-
-        $assessmentTotalsByAssessmentId = $assessments->mapWithKeys(function ($assessmentRow) use ($assessmentItemsByAssessmentId) {
-            $itemRows = collect($assessmentItemsByAssessmentId->get($assessmentRow->assessment_id, []));
-
-            if ($itemRows->isNotEmpty()) {
-                $totalScore = $itemRows
-                    ->filter(fn ($itemRow) => (bool) ($itemRow->affects_total ?? true))
-                    ->sum(fn ($itemRow) => (float) $itemRow->score);
-            } else {
-                $totalScore = (float) $assessmentRow->assignment1
-                    + (float) $assessmentRow->assignment2
-                    + (float) $assessmentRow->test1
-                    + (float) $assessmentRow->test2
-                    + (float) $assessmentRow->exams;
-            }
-
-            return [$assessmentRow->assessment_id => round((float) $totalScore, 2)];
-        });
+        // Totals already calculated above using getAssessmentTotals
 
         $subjectParticipantCounts = $assessments
             ->groupBy('subject_id')
@@ -814,11 +748,11 @@ class ResultService
 
         $assessmentsByStudent = $assessments->groupBy('student_id');
 
-        $rows = $students->map(function (Student $student) use ($assessmentsByStudent, $results, $class, $assessmentItemsByAssessmentId, $assessmentTotalsByAssessmentId, $subjectRankings, $subjectParticipantCounts) {
+        $rows = $students->map(function (Student $student) use ($assessmentsByStudent, $results, $class, $assessmentItemsByAssessmentId, $assessmentTotalsByAssessmentId, $subjectRankings, $subjectParticipantCounts, $gradeScales) {
             $studentAssessments = collect($assessmentsByStudent->get($student->id, []));
             $subjectCount = $studentAssessments->pluck('subject_id')->unique()->count();
             $assessmentCount = $studentAssessments->count();
-            $assessmentItems = $studentAssessments->map(function ($assessmentRow) use ($assessmentItemsByAssessmentId) {
+            $assessmentItems = $studentAssessments->map(function ($assessmentRow) use ($assessmentItemsByAssessmentId, $gradeScales) {
                 $itemRows = collect($assessmentItemsByAssessmentId->get($assessmentRow->assessment_id, []));
 
                 if ($itemRows->isNotEmpty()) {
@@ -836,24 +770,19 @@ class ResultService
                         ->filter(fn (array $component) => $component['affects_total'])
                         ->sum('score');
                 } else {
-                    $components = collect([
-                        ['label' => 'Assignment 1', 'code' => 'A1', 'component_type' => 'continuous_assessment', 'affects_total' => true, 'score' => round((float) $assessmentRow->assignment1, 2)],
-                        ['label' => 'Assignment 2', 'code' => 'A2', 'component_type' => 'continuous_assessment', 'affects_total' => true, 'score' => round((float) $assessmentRow->assignment2, 2)],
-                        ['label' => 'Test 1', 'code' => 'T1', 'component_type' => 'continuous_assessment', 'affects_total' => true, 'score' => round((float) $assessmentRow->test1, 2)],
-                        ['label' => 'Test 2', 'code' => 'T2', 'component_type' => 'continuous_assessment', 'affects_total' => true, 'score' => round((float) $assessmentRow->test2, 2)],
-                        ['label' => 'Exam', 'code' => 'EXAM', 'component_type' => 'exam', 'affects_total' => true, 'score' => round((float) $assessmentRow->exams, 2)],
-                    ])->filter(fn (array $component) => $component['score'] > 0)->values();
-
-                    $totalScore = $components->sum('score');
+                    $components = collect([]);
+                    $totalScore = 0.0;
                 }
+
+                $gradeScale = $this->calculateGradeFromScore($totalScore, $gradeScales);
 
                 return [
                     'subject_id' => $assessmentRow->subject_id,
                     'subject_name' => $assessmentRow->subject_name,
                     'components' => $components->all(),
                     'total_score' => round((float) $totalScore, 2),
-                    'grade' => $assessmentRow->graded,
-                    'remark' => $assessmentRow->remark,
+                    'grade' => $gradeScale?->code ?? 'F',
+                    'remark' => $gradeScale?->description,
                 ];
             })->values();
 
@@ -868,12 +797,7 @@ class ResultService
                 return $assessment;
             })->values();
 
-            $assignment1 = round((float) $studentAssessments->sum('assignment1'), 2);
-            $assignment2 = round((float) $studentAssessments->sum('assignment2'), 2);
-            $test1 = round((float) $studentAssessments->sum('test1'), 2);
-            $test2 = round((float) $studentAssessments->sum('test2'), 2);
-            $exams = round((float) $studentAssessments->sum('exams'), 2);
-            $total = round($assignment1 + $assignment2 + $test1 + $test2 + $exams, 2);
+            $total = round((float) ($studentAssessments->sum(fn ($assessmentRow) => $assessmentTotalsByAssessmentId->get($assessmentRow->assessment_id) ?? 0)), 2);
             $average = $assessmentCount > 0 ? round($total / $assessmentCount, 2) : 0.0;
 
             /** @var Result|null $result */
@@ -889,11 +813,11 @@ class ResultService
                 'subjects_recorded' => $subjectCount,
                 'subject_count' => (int) $class->subjects->count(),
                 'all_subjects_recorded' => $subjectCount >= (int) $class->subjects->count() && $class->subjects->count() > 0,
-                'assignment1' => $assignment1,
-                'assignment2' => $assignment2,
-                'test1' => $test1,
-                'test2' => $test2,
-                'exams' => $exams,
+                'assignment1' => 0,
+                'assignment2' => 0,
+                'test1' => 0,
+                'test2' => 0,
+                'exams' => 0,
                 'total_score' => $total,
                 'average_score' => $average,
                 'grade' => $result?->grade,
@@ -937,40 +861,25 @@ class ResultService
         AcademicTerm $academicTerm,
         Collection $students,
         Collection $assessments,
+        Collection $assessmentTotals,
+        Collection $gradeScales,
         ?string $organizationId = null
     ): void {
         if ($students->isEmpty() || $assessments->isEmpty()) {
             return;
         }
 
-        $gradeScales = GradeScale::query()
-            ->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId))
-            ->orderBy('min_score')
-            ->get();
+        // Grade scales are now passed as an argument
 
         $studentSummaries = $assessments
             ->groupBy('student_id')
-            ->map(function (Collection $studentAssessments, string $studentId) use ($gradeScales) {
-                $overallTotal = (float) $studentAssessments->sum(function ($assessment) {
-                    return (float) $assessment->assignment1
-                        + (float) $assessment->assignment2
-                        + (float) $assessment->test1
-                        + (float) $assessment->test2
-                        + (float) $assessment->exams;
+            ->map(function (Collection $studentAssessments, string $studentId) use ($gradeScales, $assessmentTotals) {
+                $overallTotal = (float) $studentAssessments->sum(function ($assessment) use ($assessmentTotals) {
+                    return (float) ($assessmentTotals->get($assessment->assessment_id) ?? 0);
                 });
                 $subjectCount = $studentAssessments->pluck('subject_id')->unique()->count();
                 $averageScore = $subjectCount > 0 ? round($overallTotal / $subjectCount, 2) : 0.0;
-                $gradeScale = $gradeScales->first(function (GradeScale $gradeScale) use ($averageScore): bool {
-                    $minScore = $gradeScale->min_score !== null ? (float) $gradeScale->min_score : null;
-                    $maxScore = $gradeScale->max_score !== null ? (float) $gradeScale->max_score : null;
-
-                    if ($minScore === null && $maxScore === null) {
-                        return false;
-                    }
-
-                    return ($minScore === null || $averageScore >= $minScore)
-                        && ($maxScore === null || $averageScore <= $maxScore);
-                });
+                $gradeScale = $this->calculateGradeFromScore($averageScore, $gradeScales);
 
                 return [
                     'student_id' => $studentId,
@@ -1015,24 +924,47 @@ class ResultService
             /** @var Result|null $existing */
             $existing = $existingResults->get($summary['student_id']);
 
-            Result::query()->updateOrCreate(
-                [
+            $data = [
+                'organization_id' => $organizationId,
+                'total_score' => $summary['overall_total'],
+                'grade' => $summary['grade'],
+                'remark' => $summary['remark'],
+                'position_in_class' => $rankings[$summary['student_id']] ?? null,
+                'status' => $this->resultStatusValue($existing?->status) ?? 'under_review',
+                'published_by' => $existing?->published_by,
+                'published_at' => $existing?->published_at,
+            ];
+
+            // Performance: Only update if the record doesn't exist or if values have changed
+            if (! $existing) {
+                Result::query()->create(array_merge([
                     'student_id' => $summary['student_id'],
                     'class_id' => $class->id,
                     'academic_session' => $academicYear->name,
                     'term' => $academicTerm->name,
-                ],
-                [
-                    'organization_id' => $organizationId,
-                    'total_score' => $summary['overall_total'],
-                    'grade' => $summary['grade'],
-                    'remark' => $summary['remark'],
-                    'position_in_class' => $rankings[$summary['student_id']] ?? null,
-                    'status' => $this->resultStatusValue($existing?->status) ?? 'under_review',
-                    'published_by' => $existing?->published_by,
-                    'published_at' => $existing?->published_at,
-                ]
-            );
+                ], $data));
+            } else {
+                $needsUpdate = false;
+                foreach ($data as $key => $value) {
+                    if ($key === 'status') {
+                        $currentStatus = $this->resultStatusValue($existing->status);
+                        if ($currentStatus !== $value) {
+                            $needsUpdate = true;
+                            break;
+                        }
+                        continue;
+                    }
+
+                    if ($existing->{$key} != $value) {
+                        $needsUpdate = true;
+                        break;
+                    }
+                }
+
+                if ($needsUpdate) {
+                    $existing->update($data);
+                }
+            }
         }
     }
 
@@ -1055,5 +987,51 @@ class ResultService
                 },
             ];
         })->values()->all();
+    }
+
+    protected function getAssessmentItemsByAssessmentId(Collection $assessments): Collection
+    {
+        return DB::table('illimi_gradebook_assessment_items as items')
+            ->leftJoin('illimi_gradebook_template_items as template_items', 'template_items.id', '=', 'items.template_item_id')
+            ->whereIn('items.assessment_id', $assessments->pluck('assessment_id')->filter()->values())
+            ->whereNull('items.deleted_at')
+            ->orderBy('template_items.position')
+            ->get([
+                'items.assessment_id',
+                'items.score',
+                'template_items.label',
+                'template_items.code',
+                'template_items.component_type',
+                'template_items.affects_total',
+            ])
+            ->groupBy('assessment_id');
+    }
+
+    protected function getAssessmentTotals(Collection $assessments, Collection $assessmentItemsByAssessmentId): Collection
+    {
+        return $assessments->mapWithKeys(function ($assessmentRow) use ($assessmentItemsByAssessmentId) {
+            $itemRows = collect($assessmentItemsByAssessmentId->get($assessmentRow->assessment_id, []));
+
+            $totalScore = $itemRows
+                ->filter(fn ($itemRow) => (bool) ($itemRow->affects_total ?? true))
+                ->sum(fn ($itemRow) => (float) $itemRow->score);
+
+            return [$assessmentRow->assessment_id => round((float) $totalScore, 2)];
+        });
+    }
+
+    protected function calculateGradeFromScore(float $score, Collection $gradeScales): ?GradeScale
+    {
+        return $gradeScales->first(function (GradeScale $gradeScale) use ($score): bool {
+            $minScore = $gradeScale->min_score !== null ? (float) $gradeScale->min_score : null;
+            $maxScore = $gradeScale->max_score !== null ? (float) $gradeScale->max_score : null;
+
+            if ($minScore === null && $maxScore === null) {
+                return false;
+            }
+
+            return ($minScore === null || $score >= $minScore)
+                && ($maxScore === null || $score <= $maxScore);
+        });
     }
 }

@@ -29,6 +29,7 @@ Route::middleware(['web', 'auth', 'organization'])
     ->prefix('academics')
     ->name('academics.')
     ->group(function () {
+        Route::get('/settings', [\Illimi\Academics\Controllers\Web\AcademicSettingsWebController::class, 'index'])->name('settings');
         Route::resource('classes', ClassWebController::class)->only(['index']);
         Route::resource('classrooms', ClassroomWebController::class)->only(['index']);
         Route::resource('sections', SectionWebController::class)->only(['index']);

@@ -32,9 +32,9 @@
                             <th>Session</th>
                             <th>Term</th>
                             <th>Total</th>
-                            <th>Grade</th>
+                            {{-- <th>Grade</th> --}}
                             <th>Status</th>
-                            <th>Action</th>
+                            {{-- <th>Action</th> --}}
                         </tr>
                     </thead>
                     <tbody id="resultsTableBody">
@@ -45,9 +45,9 @@
                                 <td>{{ $result->academic_session ?: '—' }}</td>
                                 <td>{{ $result->term ?: '—' }}</td>
                                 <td>{{ $result->total_score ?? '—' }}</td>
-                                <td>{{ $result->grade ?: '—' }}</td>
+                                {{-- <td>{{ $result->grade ?: '—' }}</td> --}}
                                 <td>{{ $result->status?->label() ?? $result->status ?? '—' }}</td>
-                                <td><a href="/academics/results" class="text-primary-600">View</a></td>
+                                {{-- <td><a href="/academics/results" class="text-primary-600">View</a></td> --}}
                             </tr>
                         @empty
                             <tr>
