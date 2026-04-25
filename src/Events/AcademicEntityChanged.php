@@ -2,13 +2,13 @@
 
 namespace Illimi\Academics\Events;
 
-use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class AcademicEntityChanged implements ShouldBroadcastNow
+class AcademicEntityChanged implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -63,12 +63,12 @@ class AcademicEntityChanged implements ShouldBroadcastNow
     {
         $organizationId = (string) ($this->payload['organization_id'] ?? 'global');
 
-        return [new Channel("academic.organization.{$organizationId}")];
+        return [new PrivateChannel("org.{$organizationId}.academics")];
     }
 
     public function broadcastAs(): string
     {
-        return 'academic.entity.changed';
+        return 'entity.changed';
     }
 
     public function broadcastWith(): array

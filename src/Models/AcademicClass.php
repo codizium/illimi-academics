@@ -6,6 +6,7 @@ use Codizium\Core\Models\BaseModel;
 use Codizium\Core\Traits\BelongsToOrganization;
 use Codizium\Core\Traits\HasCuid;
 use Illimi\Students\Models\Student;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -76,5 +77,22 @@ class AcademicClass extends BaseModel
     public function exams(): HasMany
     {
         return $this->hasMany(Exam::class, 'class_id');
+    }
+
+    public function scopeTeacher(Builder $query, $user = null): Builder
+    {
+        if (\Illimi\Academics\Scopes\TeacherScope::shouldBypass($user)) {
+            return $query;
+        }
+
+        $user ??= auth()->user();
+
+        return $query->where(function (Builder $q) use ($user) {
+            $q->whereHas('classTeacher', function ($teacherQuery) use ($user) {
+                $teacherQuery->where('user_id', $user->id);
+            })->orWhereHas('subjects.teachers', function ($teacherQuery) use ($user) {
+                $teacherQuery->where('user_id', $user->id);
+            });
+        });
     }
 }

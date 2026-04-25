@@ -55,5 +55,60 @@ class AcademicsServiceProvider extends ServiceProvider
                 BackfillSubjectClassAssignmentsCommand::class,
             ]);
         }
+
+        $this->registerMenu();
+    }
+
+    protected function registerMenu()
+    {
+        if (class_exists(\Illimi\IllimiCore\Facades\IllimiCore::class)) {
+            $nav = \Illimi\IllimiCore\Facades\IllimiCore::navigation();
+
+            // Classes & Academics
+            $nav->register('classes', [
+                'label' => 'Classes',
+                'icon' => 'ri-list-view',
+                'category' => 'academics',
+                'priority' => 20,
+                'roles' => ['admin', 'super-admin'],
+                'feature' => 'class_management',
+                'children' => [
+                    ['label' => 'Sections', 'route' => 'academics.sections.index'],
+                    ['label' => 'Classes', 'route' => 'academics.classes.index'],
+                    ['label' => 'Classrooms', 'route' => 'academics.classrooms.index'],
+                    ['label' => 'Subjects', 'route' => 'academics.subjects.index'],
+                    ['label' => 'Syllabi', 'route' => 'academics.syllabi.index'],
+                ],
+            ]);
+
+            // Examinations
+            $nav->register('exams', [
+                'label' => 'Examinations',
+                'icon' => 'ri-file-edit-line',
+                'category' => 'academics',
+                'priority' => 30,
+                'roles' => ['admin', 'super-admin'],
+                'feature' => 'exam_management',
+                'children' => [
+                    ['label' => 'Exams', 'route' => 'academics.exams.index'],
+                    ['label' => 'Exam Results', 'route' => 'academics.results.index'],
+                    ['label' => 'Publish Results', 'route' => 'academics.results.publish'],
+                    ['label' => 'Transcripts', 'route' => 'academics.transcripts.index'],
+                ],
+            ]);
+
+            // Teacher Specific Academics (If not admin)
+            $nav->register('teacher-academics', [
+                'label' => 'Academics',
+                'icon' => 'ri-mortarboard-line',
+                'category' => 'academics',
+                'priority' => 21,
+                'roles' => ['teacher'],
+                'children' => [
+                    ['label' => 'Subjects', 'route' => 'academics.subjects.index'],
+                    ['label' => 'Syllabi', 'route' => 'academics.syllabi.index'],
+                ],
+            ]);
+        }
     }
 }
