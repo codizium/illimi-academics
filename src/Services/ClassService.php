@@ -15,6 +15,8 @@ class ClassService
             $query->where('level', $filters['level']);
         }
 
+        $query->where($filters)->with('section');
+
 
         return $query->latest()->paginate($perPage);
     }

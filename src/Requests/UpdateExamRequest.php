@@ -43,7 +43,7 @@ class UpdateExamRequest extends FormRequest
         $validator->after(function ($validator) {
             $exam = Exam::query()
                 ->when($this->organizationId(), fn ($query, $organizationId) => $query->where('organization_id', $organizationId))
-                ->find($this->route('id'));
+                ->find($this->route('exam'));
 
             $this->validateSubjectClassPair(
                 $validator,

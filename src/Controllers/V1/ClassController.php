@@ -32,7 +32,9 @@ class ClassController extends BaseController
         $perPage = (int) $request->query('per_page', 15);
         $filters = array_filter([
             'level' => $request->query('level'),
+            ...$request->only(['id', 'name', 'section_id', 'classroom_id', 'class_teacher_id']),
         ], fn ($value) => $value !== null && $value !== '');
+
 
         $classes = $this->service->list($filters, $perPage);
 

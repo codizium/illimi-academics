@@ -78,6 +78,10 @@ class AcademicsServiceProvider extends ServiceProvider
                     ['label' => 'Classrooms', 'route' => 'academics.classrooms.index'],
                     ['label' => 'Subjects', 'route' => 'academics.subjects.index'],
                     ['label' => 'Syllabi', 'route' => 'academics.syllabi.index'],
+                    ['label' => 'Schemes of Work', 'route' => 'academics.scheme_of_work.index'],
+                    ['label' => 'Lesson Plans', 'route' => 'academics.lesson_plans.index'],
+                    // ['label' => 'Academic Years', 'route' => 'academics.academic_years.index'],
+                    // ['label' => 'Academic Terms', 'route' => 'academics.terms.index'],
                 ],
             ]);
 
@@ -91,13 +95,44 @@ class AcademicsServiceProvider extends ServiceProvider
                 'feature' => 'exam_management',
                 'children' => [
                     ['label' => 'Exams', 'route' => 'academics.exams.index'],
+                    ['label' => 'Gradebook', 'route' => 'academics.gradebook.index'],
                     ['label' => 'Exam Results', 'route' => 'academics.results.index'],
                     ['label' => 'Publish Results', 'route' => 'academics.results.publish'],
                     ['label' => 'Transcripts', 'route' => 'academics.transcripts.index'],
+                    ['label' => 'Check Results', 'route' => 'academics.results.check'],
+                    ['label' => 'Appeals', 'route' => 'academics.appeals.index'],
+                    ['label' => 'Question Banks', 'route' => 'academics.question_banks.index'],
                 ],
             ]);
 
-            // Teacher Specific Academics (If not admin)
+            // Student Utilities
+            $nav->register('student-utilities', [
+                'label' => 'Student Utilities',
+                'icon' => 'ri-tools-line',
+                'category' => 'students',
+                'priority' => 40,
+                'roles' => ['admin', 'super-admin'],
+                'children' => [
+                    ['label' => 'Promotion', 'route' => 'academics.promotion.index'],
+                    ['label' => 'Barcodes & ID Cards', 'route' => 'academics.barcodes.index'],
+                    ['label' => 'Certificates', 'route' => 'academics.certificates.index'],
+                ],
+            ]);
+
+            // Academic Settings
+            $nav->register('academic-settings', [
+                'label' => 'Settings',
+                'icon' => 'ri-settings-3-line',
+                'category' => 'academics',
+                'priority' => 90,
+                'roles' => ['admin', 'super-admin'],
+                'children' => [
+                    ['label' => 'Academic Settings', 'route' => 'academics.settings'],
+                    ['label' => 'Grade Scales', 'route' => 'academics.grade_scales.index'],
+                ],
+            ]);
+
+            // Teacher Specific Academics
             $nav->register('teacher-academics', [
                 'label' => 'Academics',
                 'icon' => 'ri-mortarboard-line',
@@ -107,6 +142,24 @@ class AcademicsServiceProvider extends ServiceProvider
                 'children' => [
                     ['label' => 'Subjects', 'route' => 'academics.subjects.index'],
                     ['label' => 'Syllabi', 'route' => 'academics.syllabi.index'],
+                    ['label' => 'Schemes of Work', 'route' => 'academics.scheme_of_work.index'],
+                    ['label' => 'Lesson Plans', 'route' => 'academics.lesson_plans.index'],
+                    ['label' => 'Gradebook', 'route' => 'academics.gradebook.index'],
+                    ['label' => 'Exams', 'route' => 'academics.exams.index'],
+                ],
+            ]);
+
+            // Student Specific Academics
+            $nav->register('student-academics', [
+                'label' => 'My Academics',
+                'icon' => 'ri-mortarboard-line',
+                'category' => 'academics',
+                'priority' => 22,
+                'roles' => ['student'],
+                'children' => [
+                    ['label' => 'My Results', 'route' => 'academics.results.index'],
+                    ['label' => 'My Exams', 'route' => 'academics.exams.index'],
+                    ['label' => 'Result Checker', 'route' => 'academics.results.check'],
                 ],
             ]);
         }

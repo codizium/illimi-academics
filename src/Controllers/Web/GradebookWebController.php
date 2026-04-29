@@ -21,7 +21,7 @@ class GradebookWebController extends AcademicsWebController
         $classes = $this->queryFor(AcademicClass::class)->orderBy('name')->get();
         $components = GradeComponentEnum::cases();
 
-        return view('illimi-academics::pages.gradebook', compact('entries', 'students', 'subjects', 'classes', 'components'));
+        return \Inertia\Inertia::render('Academics/Gradebook/Index', compact('entries', 'students', 'subjects', 'classes', 'components'));
     }
 
     public function create()
@@ -31,6 +31,6 @@ class GradebookWebController extends AcademicsWebController
         $classes = $this->queryFor(AcademicClass::class)->orderBy('name')->get();
         $components = GradeComponentEnum::cases();
 
-        return view('illimi-academics::pages.gradebook-add', compact('students', 'subjects', 'classes', 'components'));
+        return \Inertia\Inertia::render('Academics/Gradebook/Add', compact('students', 'subjects', 'classes', 'components'));
     }
 }

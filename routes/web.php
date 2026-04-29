@@ -3,14 +3,19 @@
 use Illimi\Academics\Controllers\Web\AcademicTermWebController;
 use Illimi\Academics\Controllers\Web\AcademicYearWebController;
 use Illimi\Academics\Controllers\Web\AppealWebController;
+use Illimi\Academics\Controllers\Web\BarcodeWebController;
+use Illimi\Academics\Controllers\Web\CertificateWebController;
 use Illimi\Academics\Controllers\Web\ClassWebController;
 use Illimi\Academics\Controllers\Web\ClassroomWebController;
 use Illimi\Academics\Controllers\Web\ExamWebController;
 use Illimi\Academics\Controllers\Web\GradeScaleWebController;
 use Illimi\Academics\Controllers\Web\GradebookWebController;
+use Illimi\Academics\Controllers\Web\LessonPlanWebController;
+use Illimi\Academics\Controllers\Web\PromotionWebController;
 use Illimi\Academics\Controllers\Web\QuestionBankWebController;
 use Illimi\Academics\Controllers\Web\QuestionWebController;
 use Illimi\Academics\Controllers\Web\ResultWebController;
+use Illimi\Academics\Controllers\Web\SchemeOfWorkWebController;
 use Illimi\Academics\Controllers\Web\SectionWebController;
 use Illimi\Academics\Controllers\Web\SubjectWebController;
 use Illimi\Academics\Controllers\Web\SyllabusWebController;
@@ -34,11 +39,17 @@ Route::middleware(['web', 'auth', 'organization'])
         Route::resource('classrooms', ClassroomWebController::class)->only(['index']);
         Route::resource('sections', SectionWebController::class)->only(['index']);
         Route::resource('academic-years', AcademicYearWebController::class)
-            ->only(['index'])
+            ->only(['index', 'store'])
             ->names('academic_years');
-        Route::resource('terms', AcademicTermWebController::class)->only(['index', 'create', 'edit']);
+        Route::resource('terms', AcademicTermWebController::class)->only(['index', 'create', 'edit', 'store']);
         Route::resource('subjects', SubjectWebController::class)->only(['index']);
         Route::resource('syllabi', SyllabusWebController::class)->only(['index']);
+        Route::resource('schemes-of-work', SchemeOfWorkWebController::class)
+            ->only(['index'])
+            ->names('scheme_of_work');
+        Route::resource('lesson-plans', LessonPlanWebController::class)
+            ->only(['index'])
+            ->names('lesson_plans');
         Route::resource('grade-scales', GradeScaleWebController::class)
             ->only(['index'])
             ->names('grade_scales');
@@ -55,4 +66,7 @@ Route::middleware(['web', 'auth', 'organization'])
         Route::get('/exams/attempts', [ExamWebController::class, 'attempts'])->name('exams.attempts');
         Route::get('/exams/item-analysis', [ExamWebController::class, 'itemAnalysis'])->name('exams.item_analysis');
         Route::resource('appeals', AppealWebController::class)->only(['index', 'create']);
+        Route::get('/barcodes', [BarcodeWebController::class, 'index'])->name('barcodes.index');
+        Route::get('/certificates', [CertificateWebController::class, 'index'])->name('certificates.index');
+        Route::get('/promotion', [PromotionWebController::class, 'index'])->name('promotion.index');
     });

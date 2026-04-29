@@ -12,16 +12,16 @@ class ExamWebController extends AcademicsWebController
     public function index()
     {
         $exams = $this->queryFor(Exam::class)
-            ->with(['subject', 'academicClass'])
+            ->with(['subject', 'academicClass.section'])
             ->latest()
-            ->get();
+            ->paginate(15);
         $subjects = $this->queryFor(Subject::class)
             ->with(['classes' => fn ($query) => $query->orderBy('name')])
             ->orderBy('name')
             ->get();
-        $classes = $this->queryFor(AcademicClass::class)->orderBy('name')->get();
+        $classes = $this->queryFor(AcademicClass::class)->with('section')->orderBy('name')->get();
 
-        return view('illimi-academics::pages.exams', compact('exams', 'subjects', 'classes'));
+        return \Inertia\Inertia::render('Academics/Exams', compact('exams', 'subjects', 'classes'));
     }
 
     public function create()
@@ -30,9 +30,9 @@ class ExamWebController extends AcademicsWebController
             ->with(['classes' => fn ($query) => $query->orderBy('name')])
             ->orderBy('name')
             ->get();
-        $classes = $this->queryFor(AcademicClass::class)->orderBy('name')->get();
+        $classes = $this->queryFor(AcademicClass::class)->with('section')->orderBy('name')->get();
 
-        return view('illimi-academics::pages.exam-add', compact('subjects', 'classes'));
+        return \Inertia\Inertia::render('Academics/ExamAdd', compact('subjects', 'classes'));
     }
 
     public function attempts()
@@ -42,13 +42,13 @@ class ExamWebController extends AcademicsWebController
             ->latest()
             ->get();
 
-        return view('illimi-academics::pages.exam-attempts', compact('attempts'));
+        return \Inertia\Inertia::render('Academics/ExamAttempts', compact('attempts'));
     }
 
     public function itemAnalysis()
     {
         $exams = $this->queryFor(Exam::class)->orderByDesc('starts_at')->get();
 
-        return view('illimi-academics::pages.item-analysis', compact('exams'));
+        return \Inertia\Inertia::render('Academics/ItemAnalysis', compact('exams'));
     }
 }

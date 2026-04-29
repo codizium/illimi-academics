@@ -10,8 +10,9 @@ use Illuminate\Http\Request;
 
 class AcademicSettingsWebController extends AcademicsWebController
 {
-    public function index()
+    public function index(Request $request)
     {
+        $activeTab = $request->query('tab', 'sessions');
         // Fetch Academic Years
         $academicYears = $this->queryFor(AcademicYear::class)
             ->withCount('terms')
@@ -42,14 +43,15 @@ class AcademicSettingsWebController extends AcademicsWebController
         $subjects = \Illimi\Academics\Models\Subject::orderBy('name')->get();
         $classes = \Illimi\Academics\Models\AcademicClass::with('section')->orderBy('name')->get();
 
-        return view('illimi-academics::pages.academic-settings', compact(
-            'academicYears',
-            'terms',
-            'gradeScales',
-            'templates',
-            'statuses',
-            'subjects',
-            'classes'
-        ));
+        return \Inertia\Inertia::render('Academics/AcademicSettings', [
+            'activeTab' => $activeTab,
+            'academicYears' => $academicYears,
+            'academicTerms' => $terms,
+            'gradeScales' => $gradeScales,
+            'gradingTemplates' => $templates,
+            'statuses' => $statuses,
+            'subjects' => $subjects,
+            'classes' => $classes
+        ]);
     }
 }

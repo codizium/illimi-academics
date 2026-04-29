@@ -2,6 +2,7 @@
 
 use Illimi\Academics\Controllers\V1\AcademicTermController;
 use Illimi\Academics\Controllers\V1\ClassroomController;
+use Illimi\Academics\Controllers\V1\LessonPlanController;
 use Illimi\Academics\Controllers\V1\SectionController;
 use Illimi\Academics\Controllers\V1\SyllabusController;
 use Illimi\Academics\Controllers\V1\AcademicYearController;
@@ -14,6 +15,7 @@ use Illimi\Academics\Controllers\V1\GradebookController;
 use Illimi\Academics\Controllers\V1\QuestionBankController;
 use Illimi\Academics\Controllers\V1\QuestionController;
 use Illimi\Academics\Controllers\V1\ResultController;
+use Illimi\Academics\Controllers\V1\SchemeOfWorkController;
 use Illimi\Academics\Controllers\V1\SubjectController;
 use Illimi\Academics\Controllers\V1\TranscriptController;
 use Illuminate\Support\Facades\Route;
@@ -54,4 +56,6 @@ Route::prefix('api/v1/academics')->middleware(['api', 'auth:sanctum', 'organizat
         ->only(['index', 'store', 'show', 'destroy'])
         ->names('v1.academics.appeals');
     Route::put('appeals/{id}/resolve', [GradeAppealController::class, 'resolve'])->name('v1.academics.appeals.resolve');
+    Route::apiResource('schemes-of-work', SchemeOfWorkController::class)->names('v1.academics.schemes_of_work');
+    Route::apiResource('lesson-plans', LessonPlanController::class)->names('v1.academics.lesson_plans');
 });

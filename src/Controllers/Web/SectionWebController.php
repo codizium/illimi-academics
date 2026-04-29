@@ -3,6 +3,7 @@
 namespace Illimi\Academics\Controllers\Web;
 
 use Illimi\Academics\Models\Section;
+use \Inertia\Inertia;
 
 class SectionWebController extends AcademicsWebController
 {
@@ -13,6 +14,6 @@ class SectionWebController extends AcademicsWebController
             ->latest()
             ->get();
 
-        return view('illimi-academics::pages.sections', compact('sections'));
+        return \Inertia\Inertia::render('Academics/Sections', compact('sections'));
     }
 }

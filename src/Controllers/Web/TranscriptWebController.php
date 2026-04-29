@@ -13,8 +13,8 @@ class TranscriptWebController extends AcademicsWebController
         $transcripts = $this->queryFor(Transcript::class)
             ->with('student')
             ->latest('generated_at')
-            ->get();
+            ->paginate(20);
 
-        return view('illimi-academics::pages.transcripts', compact('students', 'transcripts'));
+        return \Inertia\Inertia::render('Academics/Transcripts', compact('students', 'transcripts'));
     }
 }

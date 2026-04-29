@@ -4,13 +4,14 @@ namespace Illimi\Academics\Models;
 
 use Codizium\Core\Models\BaseModel;
 use Codizium\Core\Traits\BelongsToOrganization;
+use Codizium\Core\Traits\HasAttachment;
 use Codizium\Core\Traits\HasCuid;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Syllabus extends BaseModel
 {
-    use BelongsToOrganization, HasCuid, SoftDeletes;
+    use BelongsToOrganization, HasCuid, SoftDeletes, HasAttachment;
 
     protected $table = 'illimi_syllabi';
 

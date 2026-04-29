@@ -14,7 +14,7 @@ class UpdateSubjectRequest extends FormRequest
 
     public function rules(): array
     {
-        $subjectId = $this->route('id');
+        $subjectId = $this->route('subject');
 
         return [
             'name' => ['sometimes', 'string', 'max:255'],
@@ -26,6 +26,16 @@ class UpdateSubjectRequest extends FormRequest
             'teacher_ids.*' => ['uuid', 'exists:illimi_staff,id'],
             'class_ids' => ['nullable', 'array'],
             'class_ids.*' => ['uuid', 'exists:illimi_classes,id'],
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'name.required' => 'Subject name is required',
+            'code.required' => 'Subject code is required',
+            'teacher_ids.exists' => 'One or more teachers do not exist',
+            'class_ids.exists' => 'One or more classes do not exist',
         ];
     }
 }

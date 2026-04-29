@@ -198,7 +198,7 @@
                 <div class="modal-body">
                     <p class="mb-8">Are you sure you want to delete <strong id="appealDeleteName">this appeal</strong>?</p>
                     <p class="mb-0 text-sm text-secondary-light">This action cannot be undone.</p>
-                    <form id="appealDeleteForm" data-delete-url-template="{{ route('v1.academics.appeals.destroy', ['id' => '__ID__'], false) }}"></form>
+                    <form id="appealDeleteForm" data-delete-url-template="{{ route('v1.academics.appeals.destroy', ['appeal' => '__ID__'], false) }}"></form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-neutral" data-bs-dismiss="modal">Cancel</button>

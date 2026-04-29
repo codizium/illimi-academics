@@ -14,7 +14,7 @@ class UpdateGradeScaleRequest extends FormRequest
 
     public function rules(): array
     {
-        $gradeScaleId = $this->route('id');
+        $gradeScaleId = $this->route('grade_scale');
 
         return [
             'name' => ['sometimes', 'string', 'max:255'],

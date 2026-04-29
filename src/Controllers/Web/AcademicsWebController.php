@@ -18,9 +18,6 @@ abstract class AcademicsWebController
     {
         $query = $modelClass::query();
 
-        // Apply role-based scopes in priority order.
-        // TeacherScope is checked first because a Teacher who is also a Parent
-        // should use Teacher-level visibility in the academic context.
         if (method_exists($modelClass, 'scopeTeacher')) {
             $query->teacher();
         } elseif (method_exists($modelClass, 'scopeStudent')) {
@@ -44,5 +41,20 @@ abstract class AcademicsWebController
         }
 
         return $this->queryFor($modelClass)->with($with)->find($id);
+    }
+
+    protected function isAdmin(): bool
+    {
+        return auth()->user()?->hasRole('admin') || auth()->user()?->hasRole('super-admin') || auth()->user()?->hasRole('organization-admin');
+    }
+
+    protected function isTeacher(): bool
+    {
+        return auth()->user()?->hasRole('teacher');
+    }
+
+    protected function staffId(): ?string
+    {
+        return \Illimi\Staff\Models\Staff::where('user_id', auth()->id())->first()?->id;
     }
 }

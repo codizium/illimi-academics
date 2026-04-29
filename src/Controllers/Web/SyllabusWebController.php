@@ -13,12 +13,12 @@ class SyllabusWebController extends AcademicsWebController
             ->with(['subject', 'attachments'])
             ->withCount('attachments')
             ->latest()
-            ->get();
+            ->paginate(20);
 
         $subjects = $this->queryFor(Subject::class)
             ->orderBy('name')
             ->get();
 
-        return view('illimi-academics::pages.syllabi', compact('syllabi', 'subjects'));
+        return \Inertia\Inertia::render('Academics/Syllabi', compact('syllabi', 'subjects'));
     }
 }

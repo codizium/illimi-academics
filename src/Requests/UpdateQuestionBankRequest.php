@@ -31,7 +31,7 @@ class UpdateQuestionBankRequest extends FormRequest
         $validator->after(function ($validator) {
             $questionBank = QuestionBank::query()
                 ->when($this->organizationId(), fn ($query, $organizationId) => $query->where('organization_id', $organizationId))
-                ->find($this->route('id'));
+                ->find($this->route('question_bank'));
 
             $this->validateSubjectClassPair(
                 $validator,

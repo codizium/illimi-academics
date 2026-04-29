@@ -26,9 +26,9 @@ class ResultWebController extends AcademicsWebController
         $results = $this->queryFor(Result::class)
             ->with(['student', 'academicClass'])
             ->latest()
-            ->get();
+            ->paginate(20);
 
-        return view('illimi-academics::pages.results', compact('results'));
+        return \Inertia\Inertia::render('Academics/Results', compact('results'));
     }
 
     public function publish(Request $request)
@@ -55,7 +55,7 @@ class ResultWebController extends AcademicsWebController
             $selectedAcademicTermId
         );
 
-        return view('illimi-academics::pages.results-publish', compact(
+        return \Inertia\Inertia::render('Academics/ResultsPublish', compact(
             'classes',
             'academicYears',
             'academicTerms',
@@ -80,7 +80,7 @@ class ResultWebController extends AcademicsWebController
             $this->organizationId()
         );
 
-        return view('illimi-academics::pages.results-publish-manage', $publicationData + [
+        return \Inertia\Inertia::render('Academics/ResultsManage', $publicationData + [
             'classId' => $request->query('class_id'),
             'academicYearId' => $request->query('academic_year_id'),
             'academicTermId' => $request->query('academic_term_id'),
@@ -89,7 +89,7 @@ class ResultWebController extends AcademicsWebController
 
     public function check(Request $request)
     {
-        return view('illimi-academics::frontend.result-check', [
+        return \Inertia\Inertia::render('Academics/ResultCheck', [
             'admissionNumber' => trim((string) $request->query('admission_number', '')),
             'token' => strtoupper(trim((string) $request->query('token', ''))),
             'organization' => function_exists('organization') ? organization() : null,
@@ -128,7 +128,7 @@ class ResultWebController extends AcademicsWebController
             $qrSvg = (new Writer($renderer))->writeString($verificationText);
         }
 
-        return view('illimi-academics::frontend.result-display', [
+        return \Inertia\Inertia::render('Academics/ResultDisplay', [
             'admissionNumber' => $admissionNumber,
             'token' => $token,
             'resultSlip' => $resultSlip,

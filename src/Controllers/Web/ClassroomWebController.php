@@ -4,6 +4,8 @@ namespace Illimi\Academics\Controllers\Web;
 
 use Illimi\Academics\Models\Classroom;
 
+use Inertia\Inertia;
+
 class ClassroomWebController extends AcademicsWebController
 {
     public function index()
@@ -13,6 +15,6 @@ class ClassroomWebController extends AcademicsWebController
             ->orderBy('name')
             ->get();
 
-        return view('illimi-academics::pages.classrooms', compact('classrooms'));
+        return Inertia::render('Academics/Classrooms', compact('classrooms'));
     }
 }
